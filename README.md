@@ -9,3 +9,6 @@ Started of with making a really basic layout of the website using HTML,CSS. Didn
 
 Coded a web scraping program to gather the needed information into an excel file which I would use later for the database of the game.
 (web-scraping.py) 
+
+
+TBC
