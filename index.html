@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ligdle</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            background-color: #626f7c;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        .select-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        #player_select {
+            margin-right: 10px;
+            padding: 5px 10px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 5px 10px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .player-info {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+
+        .player-info-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            min-width: 200px;
+        }
+
+        .player-info-box span {
+            margin-bottom: 10px;
+        }
+
+        /* Additional CSS for the table */
+        .player-grid-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .player-grid-item {
+            width: 200px; /* Sabit kutu boyutu */
+            margin: 5px; /* Aralardaki boşluk */
+            padding: 10px;
+            border: 5px solid #ccc;
+            border-radius: 15px;
+            text-align: center;
+            background-color: #f9f9f9;
+        }
+
+        .player-name,
+        .player-team,
+        .player-position,
+        .player-age,
+        .player-jersey-number {
+            /* Her özelliği ayrı kutuda göstermek için aynı stil */
+            margin-bottom: 6px;
+            display: block; /* Özellikleri alt alta göstermek için blok düzeni */
+        }
+
+        .player-name {
+            /* Oyuncu ismi için stil */
+            font-weight: bold;
+        }
+
+        .player-team {
+            /* Takım ismi için stil */
+            font-style: italic;
+        }
+
+        .player-attributes {
+            /* Oyuncu özellikleri için stil */
+            display: flex;
+            flex-direction: row; /* İçerikleri yatayda düzenler */
+            gap: 6px; /* İçerikler arasındaki boşluk */
+            text-align: center; /* Metinleri ortalar */
+        }
+
+        .attribute-label {
+            /* Özellik etiketleri için stil */
+            font-weight: bold;
+        }
+
+        .correct {
+            background-color: #c6efce; /* Yeşil renk doğru cevap için */
+        }
+
+        .incorrect {
+            background-color: #f2dede; /* Kırmızı renk yanlış cevap için */
+        }
+        .arrow-up, .arrow-down {
+            width: 0;
+            height: 0;
+            display: inline-block;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+        }
+
+        .arrow-up {
+            border-bottom: 5px solid red;
+        }
+
+        .arrow-down {
+            border-top: 5px solid green;
+        }
+        @keyframes fadeInAnimation {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Additional style for the player information divs */
+        .player-grid-item.show-animation {
+            animation: fadeInAnimation 0.5s ease-in-out;
+        }
+        .play-again-button {
+            margin-top: 20px;
+            padding: 8px 16px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+ <!-- HTML Kodları -->
+<h1>Ligdle</h1>
+<div class="select-bar">
+    <select id="player_select">
+        {% for player in players %}
+            <option value="{{ player.name }}">{{ player.name }}</option>
+        {% endfor %}
+    </select>
+    <button id="guess-button" onclick="guess()">Tahmin et!</button>
+</div>
+
+<!-- Tabloya benzeyen div yapıları için yeni kodlar -->
+<div class="player-grid-container" id="player_table">
+    <!-- Oyuncu bilgileri burada JavaScript ile dinamik olarak eklenecek -->
+</div>
+<button class="play-again-button" onclick="retryGame()">Yenile</button>
+<script>
+    let targetPlayerData;
+
+    function addToTable(playerData) {
+        const playerGridContainer = document.getElementById('player_table');
+
+        // Create a new div for the player information
+        const playerDiv = document.createElement('div');
+        playerDiv.classList.add('player-grid-item', 'show-animation');
+        
+
+        // Compare playerData with targetPlayerData
+        const comparePlayerWithTarget = (playerAttribute, targetAttribute) => {
+            return playerAttribute === targetAttribute ? 'correct' : 'incorrect';
+        };
+
+        // Populate the player information in the div
+        playerDiv.innerHTML = `
+            <span class="player-name ${comparePlayerWithTarget(playerData.name, targetPlayerData.name)}">${playerData.name}</span>
+            <span class="player-team ${comparePlayerWithTarget(playerData.team, targetPlayerData.team)}">${playerData.team}</span>
+            <span class="player-position ${comparePlayerWithTarget(playerData.position, targetPlayerData.position)}">${getPositionName(playerData.position)}</span>
+            <span class="player-age ${comparePlayerWithTarget(playerData.age, targetPlayerData.age)}">
+                <span class="label">Yaş:</span>${compareNumericAttributes(playerData.age, targetPlayerData.age)}
+            </span>
+            <span class="player-jersey-number ${comparePlayerWithTarget(playerData.jersey_number, targetPlayerData.jersey_number)}">
+                <span class="label">Forma:</span>${compareNumericAttributes(playerData.jersey_number, targetPlayerData.jersey_number)}
+            </span>
+        `;
+
+        // Append the player div to the grid container
+        playerGridContainer.appendChild(playerDiv);
+    }
+    function getPositionName(positionCode) {
+        if (positionCode === 'G') {
+            return 'Kaleci';
+        } else if (positionCode === 'D') {
+            return 'Defans';
+        } else if (positionCode === 'M') {
+            return 'Orta Saha';
+        } else if (positionCode === 'F') {
+            return 'Forvet';
+        } else {
+            return 'Bilinmiyor'; // Handle unknown position codes if necessary
+        }
+    }
+
+    function fetchPlayerData(playerName) {
+        fetch(`/player_data/${encodeURIComponent(playerName)}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error(data.error);
+                } else {
+                    addToTable(data);
+                }
+            })
+            .catch(error => console.error(error));
+    }
+    function playAgain() {
+        // Clear the player information divs
+        const playerGridContainer = document.getElementById('player_table');
+        playerGridContainer.innerHTML = '';
+
+        // Hide the congratulatory message
+        const congratsMessage = document.querySelector('.congratulation-message');
+        congratsMessage.style.display = 'none';
+
+        // Reset the player selection to the default
+        const playerSelect = document.getElementById('player_select');
+        playerSelect.selectedIndex = 0;
+
+        // Fetch a new target player for the next round
+        startGame();
+    }
+    function guess() {
+        const playerSelect = document.getElementById('player_select');
+        const selectedPlayer = playerSelect.value;
+        fetchPlayerData(selectedPlayer);
+    }
+
+    // Call startGame() when the page loads to set up the initial state
+    function startGame() {
+        // Fetch a random player for the target player
+        fetch('/random_player/')
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error(data.error);
+                } else {
+                    // Store the target player data
+                    targetPlayerData = data;
+                }
+            })
+            .catch(error => console.error(error));
+    }
+    const compareNumericAttributes = (playerAttribute, targetAttribute) => {
+        const playerValue = parseInt(playerAttribute);
+        const targetValue = parseInt(targetAttribute);
+        if (!isNaN(playerValue) && !isNaN(targetValue)) {
+            if (playerValue < targetValue) {
+                return `${playerAttribute} <span class="arrow-up"></span>`;
+            } else if (playerValue > targetValue) {
+                return `${playerAttribute} <span class="arrow-down"></span>`;
+            }
+        }
+        return playerAttribute;
+    };
+    // Call startGame() when the page loads to set up the initial state
+    window.addEventListener('load', startGame);
+    window.onbeforeunload = function() {
+        startGame();
+    };
+    function retryGame() {
+        location.reload();
+    }
+</script>
+</body>
+</html>
